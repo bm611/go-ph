@@ -29,7 +29,7 @@ newest tech products and startups.`,
 			return
 		}
 
-		Prompt := `extract the top 5 products launched today from this text extract in json format
+		Prompt := `extract the top 20 products launched today from this text extract in json format
 									format:
 									{
 										"rank": 1,

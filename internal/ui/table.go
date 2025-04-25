@@ -9,10 +9,13 @@ import (
 )
 
 var (
-	purple      = lipgloss.Color("99")
-	brightWhite = lipgloss.Color("255")
+	// Soft pastel colors
+	pastelPink   = lipgloss.Color("#FFB6C1") // Light pink
+	pastelPurple = lipgloss.Color("#CBC3E3") // Light purple
+	pastelBlue   = lipgloss.Color("#CCCCFF") // Light blue
+	brightWhite  = lipgloss.Color("255")
 
-	headerStyle = lipgloss.NewStyle().Foreground(purple).Bold(true).Align(lipgloss.Center)
+	headerStyle = lipgloss.NewStyle().Foreground(pastelPurple).Bold(true).Align(lipgloss.Center)
 	cellStyle   = lipgloss.NewStyle().Padding(0, 1).Foreground(brightWhite)
 )
 
@@ -20,7 +23,9 @@ func RenderTable(products []llm.ProductRespType) string {
 
 	t := table.New().
 		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(purple)).
+		BorderRow(true).
+		BorderColumn(true).
+		BorderStyle(lipgloss.NewStyle().Foreground(pastelBlue)).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			switch {
 			case row == table.HeaderRow:
