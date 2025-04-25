@@ -2,7 +2,7 @@
 
 `go-ph` is a command-line interface (CLI) tool that fetches and displays products launched today on [Product Hunt](https://producthunt.com).
 
-<img src="terminal-sc.png" width="900" height="600">
+[DeepWiki](https://deepwiki.com/bm611/go-ph)
 
 ## Description
 
