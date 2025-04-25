@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/bm611/go-ph/internal/llm"
+	"github.com/bm611/go-ph/internal/scraper"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +21,32 @@ having to visit the website, helping you stay updated on the
 newest tech products and startups.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		res, err := scraper.GetPageContent("https://producthunt.com")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		Prompt := `extract the top 5 products launched today from this text extract in json format
+									format:
+									{
+										"rank": 1,
+										"name": "Peek",
+										"description": "AI personal finance coach that guides you through decisions",
+										"product_url": "https://www.producthunt.com/posts/peek-1081",
+										"image_url": "https://ph-files.imgix.net/0dcafea3-a3bd-40f6-bb99-49392faede45.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=48&h=48&fit=crop&frame=1",
+										"categories": [
+											"Productivity",
+											"Lifestyle",
+											"Personal Finance"
+										]
+									},
+
+									Here is the text extract:
+									` + "`" + res + "`"
+		llm.GetGeminiResponse(Prompt)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
