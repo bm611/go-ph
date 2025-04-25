@@ -2,6 +2,8 @@
 
 `go-ph` is a command-line interface (CLI) tool that fetches and displays products launched today on [Product Hunt](https://producthunt.com).
 
+<img src="terminal-sc.png" width="900" height="600">
+
 ## Description
 
 go-ph allows you to quickly see the latest product launches without having to visit the Product Hunt website, helping you stay updated on the newest tech products and startups. It presents the information in a clean, easy-to-read table format directly in your terminal.
