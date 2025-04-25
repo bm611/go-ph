@@ -7,10 +7,15 @@ import (
 	"log"
 	"os"
 
+	"github.com/charmbracelet/lipgloss"
 	"google.golang.org/genai"
 )
 
-func GetGeminiResponse(prompt string) {
+func GetGeminiResponse(prompt string) ([]ProductRespType, error) {
+	s := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#7D56F4"))
+	fmt.Println(s.Render("Formatting structured response with Gemini..."))
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey:  os.Getenv("GEMINI_API_KEY"),
@@ -38,7 +43,11 @@ func GetGeminiResponse(prompt string) {
 		log.Fatal(err)
 	}
 
-	for _, product := range products {
-		fmt.Println(product.Name)
-	}
+	successStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("10")).
+		Bold(true)
+
+	fmt.Println(successStyle.Render("✓ Response formatted successfully"))
+
+	return products, nil
 }

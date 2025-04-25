@@ -6,6 +6,7 @@ import (
 
 	"github.com/bm611/go-ph/internal/llm"
 	"github.com/bm611/go-ph/internal/scraper"
+	"github.com/bm611/go-ph/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +46,14 @@ newest tech products and startups.`,
 
 									Here is the text extract:
 									` + "`" + res + "`"
-		llm.GetGeminiResponse(Prompt)
+		products, err := llm.GetGeminiResponse(Prompt)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		tableString := ui.RenderTable(products)
+		fmt.Println(tableString)
 	},
 }
 

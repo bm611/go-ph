@@ -5,9 +5,15 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func GetPageContent(site string) (string, error) {
+	loadingStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("105")).
+		Bold(true)
+	fmt.Println(loadingStyle.Render("Extracting content from producthunt.com....."))
 	BaseURL := "https://r.jina.ai/"
 	fullURL := BaseURL + site
 	req, err := http.NewRequest("GET", fullURL, nil)
@@ -29,6 +35,13 @@ func GetPageContent(site string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error reading response: %w", err)
 	}
+
+	// Create a styled success message with a checkmark
+	successStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("10")).
+		Bold(true)
+
+	fmt.Println(successStyle.Render("✓ Content extracted successfully"))
 
 	return string(body), nil
 }
