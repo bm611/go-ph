@@ -27,7 +27,7 @@ func GetGeminiResponse(prompt string) ([]ProductRespType, error) {
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-2.0-flash",
+		"gemini-2.5-flash",
 		genai.Text(prompt),
 		&genai.GenerateContentConfig{
 			Temperature:      genai.Ptr[float32](0.1),
