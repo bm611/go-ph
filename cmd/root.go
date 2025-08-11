@@ -4,10 +4,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bm611/go-ph/internal/llm"
-	"github.com/bm611/go-ph/internal/scraper"
+	"github.com/bm611/go-ph/internal/config"
+	"github.com/bm611/go-ph/internal/service"
+	"github.com/bm611/go-ph/internal/spinner"
 	"github.com/bm611/go-ph/internal/ui"
 	"github.com/spf13/cobra"
+)
+
+// Command line flags
+var (
+	maxProducts    int
+	temperature    float64
+	geminiModel    string
+	productHuntURL string
+	verbose        bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -20,35 +30,62 @@ that were launched today on producthunt.com.
 It allows you to quickly see the latest product launches without
 having to visit the website, helping you stay updated on the
 newest tech products and startups.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		res, err := scraper.GetPageContent("https://producthunt.com")
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
+		// Load configuration
+		cfg := config.Load()
+
+		// Override with CLI flags if provided
+		if maxProducts > 0 {
+			cfg.MaxProducts = maxProducts
+		}
+		if temperature >= 0 {
+			cfg.Temperature = float32(temperature)
+		}
+		if geminiModel != "" {
+			cfg.GeminiModel = geminiModel
+		}
+		if productHuntURL != "" {
+			cfg.ProductHuntURL = productHuntURL
 		}
 
-		Prompt := `extract the top 10 products launched today from this text extract in json format
-									format:
-									{
-										"rank": 1,
-										"name": "Peek",
-										"description": "AI personal finance coach that guides you through decisions",
-										"product_url": "https://www.producthunt.com/posts/peek-1081",
-										"image_url": "https://ph-files.imgix.net/0dcafea3-a3bd-40f6-bb99-49392faede45.png?auto=compress&codec=mozjpeg&cs=strip&auto=format&w=48&h=48&fit=crop&frame=1",
-										"categories": [
-											"Productivity",
-											"Lifestyle",
-											"Personal Finance"
-										]
-									},
+		// Validate configuration
+		if err := cfg.Validate(); err != nil {
+			fmt.Printf("Configuration error: %v\n", err)
+			fmt.Println("\nPlease ensure you have set the required environment variables:")
+			fmt.Println("- GEMINI_API_KEY: Your Google Gemini API key")
+			fmt.Println("- JINA_API_KEY: Your Jina AI API key")
+			os.Exit(1)
+		}
 
-									Here is the text extract:
-									` + "`" + res + "`"
-		products, err := llm.GetGeminiResponse(Prompt)
+		if verbose {
+			fmt.Println(cfg.String())
+			fmt.Println()
+			fmt.Println(cfg.GetAPIKeysStatus())
+			fmt.Println()
+		}
+
+		// Start overall progress spinner
+		overallSpinner := spinner.New(spinner.BouncingBar, "Fetching and processing Product Hunt data...")
+		overallSpinner.Start()
+
+		// Create service
+		productHuntService := service.NewProductHuntService(cfg)
+
+		// Fetch today's products
+		products, err := productHuntService.GetTodaysProducts()
 		if err != nil {
-			fmt.Println("Error:", err)
+			overallSpinner.StopWithError("✗ Failed to fetch products")
+			fmt.Printf("Error fetching products: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Stop the overall spinner
+		overallSpinner.StopWithMessage("✓ All data processed successfully!")
+		fmt.Println() // Add a blank line for better formatting
+
+		// Display results
+		if len(products) == 0 {
+			fmt.Println("No products found for today.")
 			return
 		}
 
@@ -67,13 +104,10 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-ph.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Command line flags
+	rootCmd.Flags().IntVarP(&maxProducts, "max-products", "m", 0, "Maximum number of products to fetch (overrides env)")
+	rootCmd.Flags().Float64VarP(&temperature, "temperature", "T", -1, "AI model temperature (0.0-1.0, overrides env)")
+	rootCmd.Flags().StringVar(&geminiModel, "model", "", "Gemini model to use (overrides env)")
+	rootCmd.Flags().StringVarP(&productHuntURL, "url", "u", "", "Product Hunt URL to scrape (overrides env)")
+	rootCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show detailed configuration and progress")
 }

@@ -3,51 +3,50 @@ package llm
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
-	"os"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/bm611/go-ph/internal/config"
+	"github.com/bm611/go-ph/internal/spinner"
 	"google.golang.org/genai"
 )
 
-func GetGeminiResponse(prompt string) ([]ProductRespType, error) {
-	s := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
-	fmt.Println(s.Render("Formatting structured response with Gemini..."))
+func GetGeminiResponse(prompt string, cfg *config.Config) ([]ProductRespType, error) {
+	// Start animated spinner for AI processing
+	s := spinner.New(spinner.PulseStyle, "Formatting structured response with Gemini...")
+	s.Start()
+
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  os.Getenv("GEMINI_API_KEY"),
+		APIKey:  cfg.GeminiAPIKey,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
+		s.StopWithError("✗ Failed to initialize Gemini client")
 		log.Fatal(err)
 	}
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		"gemini-2.5-flash",
+		cfg.GeminiModel,
 		genai.Text(prompt),
 		&genai.GenerateContentConfig{
-			Temperature:      genai.Ptr[float32](0.1),
-			ResponseMIMEType: "application/json",
+			Temperature:      genai.Ptr[float32](cfg.Temperature),
+			ResponseMIMEType: cfg.ResponseMIME,
 		},
 	)
 	if err != nil {
+		s.StopWithError("✗ Failed to generate content with Gemini")
 		log.Fatal(err)
 	}
 	var products []ProductRespType
 	err = json.Unmarshal([]byte(result.Text()), &products)
 	if err != nil {
+		s.StopWithError("✗ Failed to parse Gemini response")
 		log.Fatal(err)
 	}
 
-	successStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("10")).
-		Bold(true)
-
-	fmt.Println(successStyle.Render("✓ Response formatted successfully"))
+	// Stop spinner with success message
+	s.StopWithMessage("✓ Response formatted successfully")
 
 	return products, nil
 }
